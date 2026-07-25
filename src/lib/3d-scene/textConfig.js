@@ -1,17 +1,13 @@
 import * as THREE from "three";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 
+export const letterSpacing = 1.05;
+
 export const getTextGeometryConfig = (font) => ({
   font: font,
-  size: 0.2,
-  height: 0.2,
-  depth: 0.01,
+  size: 0.15,
+  depth: 0.001,
   curveSegments: 12,
-  bevelEnabled: true,
-  bevelThickness: 0.01,
-  bevelSize: 0.01,
-  bevelOffset: 0,
-  bevelSegments: 5,
 });
 
 let lastUpdateTime = 0;

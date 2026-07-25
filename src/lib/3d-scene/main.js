@@ -7,7 +7,7 @@ import { ballGeometryConfig, ballMaterialConfig } from "./ballConfig";
 import { FontLoader } from "three/examples/jsm/Addons.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Flow } from "three/examples/jsm/modifiers/CurveModifier.js";
-import { getTextGeometryConfig, updateTimeText } from "./textConfig";
+import { getTextGeometryConfig, letterSpacing, updateTimeText } from "./textConfig";
 
 /**
  * ======================================== Resize handler
@@ -90,6 +90,12 @@ const fontLoader = new FontLoader();
 const font = await fontLoader.loadAsync(
   "/fonts/helvetiker_regular.typeface.json",
 );
+
+// increase letter-spacing
+for (const glyphKey in font.data.glyphs) {
+  font.data.glyphs[glyphKey].ha *= letterSpacing;
+}
+
 const now = new Date();
 const textGeometry = new TextGeometry(now.toLocaleTimeString(), {
   ...getTextGeometryConfig(font),
@@ -139,7 +145,7 @@ const animate = () => {
   ballMesh.rotation.x = elapsedTime * 0.5;
 
   // rotate text
-  flow.moveAlongCurve(-0.001);
+    flow.moveAlongCurve(-0.001);
   updateTimeText(font, flow.object3D, elapsedTime);
 
   renderer.render(scene, camera);
