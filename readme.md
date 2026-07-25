@@ -1,4 +1,4 @@
-# Three.js rotating ball and time
+# Three.js: rotating ball and time
 
 <!-- **Cards rotate and react on hover**
 
