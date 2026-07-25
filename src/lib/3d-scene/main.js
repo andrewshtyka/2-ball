@@ -25,7 +25,7 @@ export const gui = new GUI({
   width: 340,
   title: "DEBUG UI",
 });
-// gui.close();
+gui.close();
 
 export const debugObject = {
   reset: () => {
