@@ -226,7 +226,7 @@ ballTweaks
 ballTweaks
   .add(debugObject, "ballSpeed")
   .min(0)
-  .max(1000)
+  .max(600)
   .step(0.1)
   .name("Speed of ball rotation");
 

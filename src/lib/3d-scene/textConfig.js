@@ -57,7 +57,7 @@ export function createText() {
 /**
  * ======================================== Animate text
  */
-const lastUpdateMap = new WeakMap();
+const lastUpdateMap = new WeakMap(); // needed for each timer to update time live
 
 export function updateTimeText(textMesh, elapsedTime) {
   const last = lastUpdateMap.get(textMesh) ?? 0;
