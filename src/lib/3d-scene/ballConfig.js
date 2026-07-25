@@ -32,7 +32,7 @@ const ballAOTexture = textureLoader.load(texturePaths.ao(appliedType));
 export const ballGeometryConfig = {
   radius: 1,
   widthSegments: 32,
-  heightSegments: 16,
+  heightSegments: 32,
 };
 
 /**
@@ -50,3 +50,29 @@ export const ballMaterialConfig = {
   aoMap: ballAOTexture,
   aoMapIntensity: 1,
 };
+
+/**
+ * ======================================== Curved line
+ */
+
+const initialPointsConfig = {
+  radius: 1.35,
+  segments: 64,
+};
+
+export function getInitialPoints() {
+  const initialPoints = [];
+
+  for (let i = 0; i < initialPointsConfig.segments; i++) {
+    const theta = (i / initialPointsConfig.segments) * Math.PI * 2;
+    initialPoints.push(
+      new THREE.Vector3(
+        Math.cos(theta) * initialPointsConfig.radius,
+        Math.sin(theta) * initialPointsConfig.radius,
+        0,
+      ),
+    );
+  }
+
+  return initialPoints;
+}

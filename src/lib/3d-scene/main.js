@@ -1,13 +1,19 @@
 import * as THREE from "three";
 import gsap from "gsap";
 import GUI from "lil-gui";
-import { canvasSizes } from "./canvasSizes";
-import { cameraConfig } from "./cameraConfig";
-import { ballGeometryConfig, ballMaterialConfig } from "./ballConfig";
 import { FontLoader } from "three/examples/jsm/Addons.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Flow } from "three/examples/jsm/modifiers/CurveModifier.js";
-import { getTextGeometryConfig, letterSpacing, updateTimeText } from "./textConfig";
+
+import { canvasSizes } from "./canvasSizes";
+import { cameraConfig } from "./cameraConfig";
+import {
+  ballGeometryConfig,
+  ballMaterialConfig,
+  getInitialPoints,
+} from "./ballConfig";
+
+import { createText, textAnimConfig, updateTimeText } from "./textConfig";
 
 /**
  * ======================================== Resize handler
@@ -57,7 +63,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 /**
  * ======================================== Light
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(ambientLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 200);
@@ -81,54 +87,31 @@ const ballMesh = new THREE.Mesh(
     normalMap,
   }),
 );
-scene.add(ballMesh);
+
+const group = new THREE.Group();
+group.add(ballMesh);
+group.rotation.z = -Math.PI * 0.1;
+scene.add(group);
 
 /**
- * ======================================== Object: text
+ * ======================================== Bend texts
  */
-const fontLoader = new FontLoader();
-const font = await fontLoader.loadAsync(
-  "/fonts/helvetiker_regular.typeface.json",
-);
+const curve = new THREE.CatmullRomCurve3(getInitialPoints(), true);
 
-// increase letter-spacing
-for (const glyphKey in font.data.glyphs) {
-  font.data.glyphs[glyphKey].ha *= letterSpacing;
+const bendedMeshesArr = [];
+const flowsArr = [];
+for (let i = 1; i <= textAnimConfig.totalTexts; i++) {
+  const flow = new Flow(createText().textMesh);
+  flow.updateCurve(0, curve);
+  flow.moveAlongCurve(i / 3);
+
+  bendedMeshesArr.push(flow.object3D);
+  flowsArr.push(flow);
 }
 
-const now = new Date();
-const textGeometry = new TextGeometry(now.toLocaleTimeString(), {
-  ...getTextGeometryConfig(font),
+bendedMeshesArr.forEach((mesh) => {
+  scene.add(mesh);
 });
-textGeometry.center();
-textGeometry.rotateX(Math.PI * 0.5);
-
-const textMaterial = new THREE.MeshBasicMaterial();
-const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-textGeometry.computeBoundingBox();
-
-/**
- * ======================================== Bend text
- */
-const radiusLine = 1.25;
-const segments = 64;
-
-const initialPoints = [];
-for (let i = 0; i < segments; i++) {
-  const theta = (i / segments) * Math.PI * 2;
-  initialPoints.push(
-    new THREE.Vector3(
-      Math.cos(theta) * radiusLine,
-      Math.sin(theta) * radiusLine,
-      0,
-    ),
-  );
-}
-
-const curve = new THREE.CatmullRomCurve3(initialPoints, true, "chordal");
-const flow = new Flow(textMesh);
-flow.updateCurve(0, curve);
-scene.add(flow.object3D);
 
 /**
  * ======================================== Animate
@@ -141,12 +124,15 @@ const animate = () => {
   const elapsedTime = timer.getElapsed();
 
   // rotate ball
-  ballMesh.rotation.y = elapsedTime;
-  ballMesh.rotation.x = elapsedTime * 0.5;
+  ballMesh.rotation.y = -elapsedTime * 0.5;
 
   // rotate text
-    flow.moveAlongCurve(-0.001);
-  updateTimeText(font, flow.object3D, elapsedTime);
+  bendedMeshesArr.forEach((mesh) => {
+    updateTimeText(mesh, elapsedTime);
+  });
+  flowsArr.forEach((flow) => {
+    flow.moveAlongCurve(textAnimConfig.textSpeed);
+  });
 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
