@@ -3,7 +3,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 
 export const getTextGeometryConfig = (font) => ({
   font: font,
-  size: 0.4,
+  size: 0.2,
   height: 0.2,
   depth: 0.01,
   curveSegments: 12,

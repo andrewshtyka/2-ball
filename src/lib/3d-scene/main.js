@@ -6,7 +6,7 @@ import { cameraConfig } from "./cameraConfig";
 import { ballGeometryConfig, ballMaterialConfig } from "./ballConfig";
 import { FontLoader } from "three/examples/jsm/Addons.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { Flow } from "three/examples/jsm/modifiers/CurveModifierGPU.js";
+import { Flow } from "three/examples/jsm/modifiers/CurveModifier.js";
 import { getTextGeometryConfig, updateTimeText } from "./textConfig";
 
 /**
@@ -95,10 +95,34 @@ const textGeometry = new TextGeometry(now.toLocaleTimeString(), {
   ...getTextGeometryConfig(font),
 });
 textGeometry.center();
+textGeometry.rotateX(Math.PI * 0.5);
+
 const textMaterial = new THREE.MeshBasicMaterial();
 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-textMesh.position.y = 1.5;
-scene.add(textMesh);
+textGeometry.computeBoundingBox();
+
+/**
+ * ======================================== Bend text
+ */
+const radiusLine = 1.25;
+const segments = 64;
+
+const initialPoints = [];
+for (let i = 0; i < segments; i++) {
+  const theta = (i / segments) * Math.PI * 2;
+  initialPoints.push(
+    new THREE.Vector3(
+      Math.cos(theta) * radiusLine,
+      Math.sin(theta) * radiusLine,
+      0,
+    ),
+  );
+}
+
+const curve = new THREE.CatmullRomCurve3(initialPoints, true, "chordal");
+const flow = new Flow(textMesh);
+flow.updateCurve(0, curve);
+scene.add(flow.object3D);
 
 /**
  * ======================================== Animate
@@ -110,10 +134,12 @@ const animate = () => {
   timer.update();
   const elapsedTime = timer.getElapsed();
 
+  // rotate ball
   ballMesh.rotation.y = elapsedTime;
   ballMesh.rotation.x = elapsedTime * 0.5;
 
-  textMesh.rotation.y = elapsedTime * 0.5;
+  // rotate text
+  flow.moveAlongCurve(-0.001);
   updateTimeText(font, textMesh, elapsedTime);
 
   renderer.render(scene, camera);
