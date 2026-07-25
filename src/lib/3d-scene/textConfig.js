@@ -25,6 +25,7 @@ export function updateTimeText(font, textMesh, elapsedTime) {
     ...getTextGeometryConfig(font),
   });
   newGeometry.center();
+  newGeometry.rotateX(Math.PI * 0.5);
 
   textMesh.geometry.dispose();
   textMesh.geometry = newGeometry;

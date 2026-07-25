@@ -140,7 +140,7 @@ const animate = () => {
 
   // rotate text
   flow.moveAlongCurve(-0.001);
-  updateTimeText(font, textMesh, elapsedTime);
+  updateTimeText(font, flow.object3D, elapsedTime);
 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
