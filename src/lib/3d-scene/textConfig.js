@@ -20,7 +20,7 @@ for (const glyphKey in font.data.glyphs) {
 /**
  * ======================================== Configure text
  */
-const textGeometryConfig = {
+export const textGeometryConfig = {
   font: font,
   size: 0.2,
   depth: 0.001,

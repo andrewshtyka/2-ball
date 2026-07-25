@@ -14,6 +14,7 @@ import {
   textAnimConfig,
   updateTimeText,
   getInitialPoints,
+  textGeometryConfig,
 } from "./textConfig";
 
 /**
@@ -27,6 +28,10 @@ export const gui = new GUI({
 // gui.close();
 
 export const debugObject = {
+  reset: () => {
+    window.location.reload();
+  },
+
   rotationDirection: 1,
   setOppositeBallDirection: () => {
     debugObject.rotationDirection = -debugObject.rotationDirection;
@@ -36,6 +41,18 @@ export const debugObject = {
   setOppositeTextDirection: () => {
     debugObject.textDirection = -debugObject.textDirection;
   },
+
+  reactOnCursor: 1, // 1 = true, 0 = false
+  stop: () => {
+    debugObject.reactOnCursor = 0;
+  },
+  resume: () => {
+    debugObject.reactOnCursor = 1;
+  },
+
+  ballSpeed: 1,
+  textSpeed: 1,
+  textSize: 1,
 };
 
 /**
@@ -147,18 +164,22 @@ bendedMeshesArr.forEach((mesh) => {
  * ======================================== Animate cursor
  */
 
-const xTo = gsap.quickTo(masterGroup.rotation, "y", {
+const xToRotation = gsap.quickTo(masterGroup.rotation, "y", {
   duration: 1,
   ease: "power2",
 });
-const yTo = gsap.quickTo(masterGroup.rotation, "x", {
+const yToRotation = gsap.quickTo(masterGroup.rotation, "x", {
   duration: 1,
   ease: "power2",
 });
 
 window.addEventListener("mousemove", (e) => {
-  xTo((e.clientX / window.innerWidth - 0.5) * 0.5);
-  yTo(e.clientY / window.innerHeight - 0.5);
+  xToRotation(
+    (e.clientX / window.innerWidth - 0.5) * 0.5 * debugObject.reactOnCursor,
+  );
+  yToRotation(
+    (e.clientY / window.innerHeight - 0.5) * debugObject.reactOnCursor,
+  );
 });
 
 /**
@@ -172,14 +193,19 @@ const animate = () => {
   const elapsedTime = timer.getElapsed();
 
   // rotate ball
-  ballMesh.rotation.y = -elapsedTime * 0.5 * debugObject.rotationDirection;
+  ballMesh.rotation.y =
+    -elapsedTime * 0.5 * debugObject.rotationDirection * debugObject.ballSpeed;
 
   // rotate text
   bendedMeshesArr.forEach((mesh) => {
     updateTimeText(mesh, elapsedTime);
   });
   flowsArr.forEach((flow) => {
-    flow.moveAlongCurve(textAnimConfig.textSpeed * debugObject.textDirection);
+    flow.moveAlongCurve(
+      textAnimConfig.textSpeed *
+        debugObject.textDirection *
+        debugObject.textSpeed,
+    );
   });
 
   renderer.render(scene, camera);
@@ -191,20 +217,41 @@ animate();
 /**
  * ======================================== Debug tweaks
  */
-gui
+gui.add(debugObject, "reset").name("Reset");
+
+const ballTweaks = gui.addFolder("Ball");
+ballTweaks
   .add(debugObject, "setOppositeBallDirection")
   .name("Change ball rotation direction");
-gui
+ballTweaks
+  .add(debugObject, "ballSpeed")
+  .min(0)
+  .max(1000)
+  .step(0.1)
+  .name("Speed of ball rotation");
+
+const textTweaks = gui.addFolder("Text");
+textTweaks
   .add(debugObject, "setOppositeTextDirection")
   .name("Change text rotation direction");
+textTweaks
+  .add(debugObject, "textSpeed")
+  .min(0)
+  .max(500)
+  .step(0.1)
+  .name("Speed of text rotation");
+textTweaks
+  .add(textGeometryConfig, "size")
+  .min(0.1)
+  .max(0.3)
+  .step(0.01)
+  .name("Text size")
+  .onFinishChange((v) => {
+    textGeometryConfig.size = v;
+  });
 
-// divide in sections: text, ball
-// 
-// reset button
-// 
-// text speed
-// text size
-// ball speed
-// camera zoom
-// 
-// stop / resume reacting to mouse
+const cursorTweaks = gui.addFolder("Cursor");
+cursorTweaks.add(debugObject, "stop").name("Stop reacting to cursor");
+cursorTweaks.add(debugObject, "resume").name("Resume reacting to cursor");
+
+gui.add(camera.position, "z").min(1.2).max(50).step(0.1).name("Zoom");
