@@ -5,4 +5,9 @@ export const cameraConfig = {
   aspect: canvasSizes.aspect,
   near: 0.1,
   far: 100,
+  position: {
+    x: 0,
+    y: 0,
+    z: 6,
+  },
 };
