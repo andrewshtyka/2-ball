@@ -41,6 +41,7 @@ export function createText() {
   const textGeometry = new TextGeometry(now.toLocaleTimeString(), {
     ...textGeometryConfig,
   });
+  textGeometry.center();
   textGeometry.rotateX(Math.PI * 0.5);
 
   const textMaterial = new THREE.MeshBasicMaterial();
@@ -69,8 +70,35 @@ export function updateTimeText(textMesh, elapsedTime) {
   const newGeometry = new TextGeometry(now.toLocaleTimeString(), {
     ...textGeometryConfig,
   });
+  newGeometry.center();
   newGeometry.rotateX(Math.PI * 0.5);
 
   textMesh.geometry.dispose();
   textMesh.geometry = newGeometry;
+}
+
+/**
+ * ======================================== Curved line
+ */
+
+const initialPointsConfig = {
+  radius: 1.25,
+  segments: 64,
+};
+
+export function getInitialPoints() {
+  const initialPoints = [];
+
+  for (let i = 0; i < initialPointsConfig.segments; i++) {
+    const theta = (i / initialPointsConfig.segments) * Math.PI * 2;
+    initialPoints.push(
+      new THREE.Vector3(
+        Math.cos(theta) * initialPointsConfig.radius,
+        Math.sin(theta) * initialPointsConfig.radius,
+        0,
+      ),
+    );
+  }
+
+  return initialPoints;
 }

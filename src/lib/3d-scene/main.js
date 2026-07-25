@@ -7,13 +7,36 @@ import { Flow } from "three/examples/jsm/modifiers/CurveModifier.js";
 
 import { canvasSizes } from "./canvasSizes";
 import { cameraConfig } from "./cameraConfig";
-import {
-  ballGeometryConfig,
-  ballMaterialConfig,
-  getInitialPoints,
-} from "./ballConfig";
+import { ballGeometryConfig, ballMaterialConfig } from "./ballConfig";
 
-import { createText, textAnimConfig, updateTimeText } from "./textConfig";
+import {
+  createText,
+  textAnimConfig,
+  updateTimeText,
+  getInitialPoints,
+} from "./textConfig";
+
+/**
+ * ======================================== Debug UI
+ */
+
+export const gui = new GUI({
+  width: 340,
+  title: "DEBUG UI",
+});
+// gui.close();
+
+export const debugObject = {
+  rotationDirection: 1,
+  setOppositeBallDirection: () => {
+    debugObject.rotationDirection = -debugObject.rotationDirection;
+  },
+
+  textDirection: 1,
+  setOppositeTextDirection: () => {
+    debugObject.textDirection = -debugObject.textDirection;
+  },
+};
 
 /**
  * ======================================== Resize handler
@@ -88,10 +111,17 @@ const ballMesh = new THREE.Mesh(
   }),
 );
 
-const group = new THREE.Group();
-group.add(ballMesh);
-group.rotation.z = -Math.PI * 0.1;
-scene.add(group);
+const ballGroup = new THREE.Group();
+ballGroup.add(ballMesh);
+ballGroup.rotation.z = -Math.PI * 0.1;
+scene.add(ballGroup);
+
+/**
+ * ======================================== Master group
+ */
+const masterGroup = new THREE.Group();
+masterGroup.add(ballGroup);
+scene.add(masterGroup);
 
 /**
  * ======================================== Bend texts
@@ -110,11 +140,29 @@ for (let i = 1; i <= textAnimConfig.totalTexts; i++) {
 }
 
 bendedMeshesArr.forEach((mesh) => {
-  scene.add(mesh);
+  masterGroup.add(mesh);
 });
 
 /**
- * ======================================== Animate
+ * ======================================== Animate cursor
+ */
+
+const xTo = gsap.quickTo(masterGroup.rotation, "y", {
+  duration: 1,
+  ease: "power2",
+});
+const yTo = gsap.quickTo(masterGroup.rotation, "x", {
+  duration: 1,
+  ease: "power2",
+});
+
+window.addEventListener("mousemove", (e) => {
+  xTo((e.clientX / window.innerWidth - 0.5) * 0.5);
+  yTo(e.clientY / window.innerHeight - 0.5);
+});
+
+/**
+ * ======================================== Animate scene
  */
 
 const timer = new THREE.Timer();
@@ -124,14 +172,14 @@ const animate = () => {
   const elapsedTime = timer.getElapsed();
 
   // rotate ball
-  ballMesh.rotation.y = -elapsedTime * 0.5;
+  ballMesh.rotation.y = -elapsedTime * 0.5 * debugObject.rotationDirection;
 
   // rotate text
   bendedMeshesArr.forEach((mesh) => {
     updateTimeText(mesh, elapsedTime);
   });
   flowsArr.forEach((flow) => {
-    flow.moveAlongCurve(textAnimConfig.textSpeed);
+    flow.moveAlongCurve(textAnimConfig.textSpeed * debugObject.textDirection);
   });
 
   renderer.render(scene, camera);
@@ -139,3 +187,24 @@ const animate = () => {
 };
 
 animate();
+
+/**
+ * ======================================== Debug tweaks
+ */
+gui
+  .add(debugObject, "setOppositeBallDirection")
+  .name("Change ball rotation direction");
+gui
+  .add(debugObject, "setOppositeTextDirection")
+  .name("Change text rotation direction");
+
+// divide in sections: text, ball
+// 
+// reset button
+// 
+// text speed
+// text size
+// ball speed
+// camera zoom
+// 
+// stop / resume reacting to mouse
